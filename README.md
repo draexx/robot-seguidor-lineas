@@ -42,8 +42,7 @@ Robot móvil autónomo construido con Arduino Nano capaz de seguir líneas negra
 - [Lista de Materiales](hardware/bom.md)
 
 ## Licencia
-Este proyecto está licenciado bajo [MIT License](LICENSE).
+Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para más detalles.
 
 ## Autor
-[Tu Nombre]
-[Tu Institución/Escuela]
+[Pedro Carranza](https://github.com/draexx)
