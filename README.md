@@ -6,7 +6,7 @@
 Robot móvil autónomo construido con Arduino Nano capaz de seguir líneas negras y detectar/evitar obstáculos utilizando un sensor ultrasónico montado en un cabezal móvil.
 
 ## Características
-- Seguimiento de líneas mediante sensor infrarrojo
+- Seguimiento de líneas mediante sensor de seguimiento
 - Detección y evasión de obstáculos con sensor ultrasónico
 - Cabezal móvil con servomotor para escaneo del entorno
 - Indicadores LED para estado de funcionamiento

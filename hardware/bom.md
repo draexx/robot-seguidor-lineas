@@ -3,7 +3,7 @@
 | Cantidad | Componente | Especificación | Función |
 |----------|------------|----------------|---------|
 | 1 | Arduino Nano | ATmega328P | Controlador principal |
-| 1 | Sensor de seguimiento | Digital/Analógico | Detección de línea |
+| 2 | Sensor de seguimiento | Digital/Analógico | Detección de línea |
 | 1 | Sensor ultrasónico | HC-SR04 | Detección de obstáculos |
 | 2 | Servomotores | SG90 | Control de cabezal y brazo |
 | 2 | Motorreductores | 3-6V DC | Propulsión |

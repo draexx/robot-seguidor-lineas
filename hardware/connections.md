@@ -8,7 +8,8 @@
 
 | Componente | Pin Arduino | Función |
 |------------|-------------|---------|
-| Sensor de seguimiento | D2 | Señal digital |
+| Sensor de seguimiento | A3 | Señal digital |
+| Sensor de seguimiento | A2 | Señal digital |
 | Ultrasonido - Trigger | D3 | Salida para iniciar medición |
 | Ultrasonido - Echo | D4 | Entrada para recibir tiempo |
 | Servo Cabezal | D9 | Control PWM |
