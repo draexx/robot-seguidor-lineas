@@ -33,6 +33,15 @@ const int BASE_SPEED = 150;     // Velocidad base de los motores (0-255)
 const int TURN_SPEED = 120;     // Velocidad de giro (0-255)
 const int SLOW_SPEED = 80;      // Velocidad lenta para giros precisos
 const int MIN_DISTANCE = 10;    // Distancia mínima para detectar obstáculo (cm)
+const int NUM_READINGS = 5;     // Número de mediciones para promediar la distancia
+
+// Parámetros de tiempo
+const int TURN_DELAY = 700;       // Tiempo de giro (ms)
+const int SCAN_DELAY = 500;       // Tiempo de escaneo (ms)
+
+// Parámetros de los sensores de línea
+const int LINE_THRESHOLD = 1;     // Valor que indica que el sensor está sobre la línea (negro)
+const int BACKGROUND_THRESHOLD = 0; // Valor que indica que el sensor está sobre el fondo (blanco)
 
 // Variables globales
 int lineState = 0;              // Estado del sensor de línea (0=sobre línea, 1=fuera de línea)
@@ -84,21 +93,24 @@ void setup() {
 }
 
 void loop() {
-  // Leer el estado del sensor de línea
-  //lineState = digitalRead(TRACK_SENSOR_PIN);
+  // Leer sensores de línea
+  int lineState1 = digitalRead(TRACK_SENSOR_PIN_1);
+  int lineState2 = digitalRead(TRACK_SENSOR_PIN_2);
 
   // Medir la distancia con el sensor ultrasónico
   distance = measureDistance();
 
   // Imprimir información de diagnóstico
-  //Serial.print("Línea: ");
-  //Serial.print(lineState);
+  Serial.print("Sensor 1: ");
+  Serial.print(lineState1);
+  Serial.print(" | Sensor 2: ");
+  Serial.print(lineState2);
   Serial.print(" | Distancia: ");
   Serial.print(distance);
   Serial.println(" cm");
 
   // Verificar si hay un obstáculo
-  if (distance < MIN_DISTANCE) {
+  if (distance < MIN_DISTANCE && distance > 0) {  // Asegurar que la distancia sea válida
     // Hay un obstáculo delante
     Serial.println("¡Obstáculo detectado!");
 
@@ -108,7 +120,7 @@ void loop() {
 
     // Detener el robot
     stopMotors();
-    delay(500);
+    delay(SCAN_DELAY);
 
     // Escanear alrededor para encontrar una ruta alternativa
     int leftDistance = scanDirection(30);   // Escanear izquierda (30°)
@@ -121,14 +133,17 @@ void loop() {
     // Decidir hacia dónde girar
     if (leftDistance > rightDistance && leftDistance > MIN_DISTANCE) {
       // Girar a la izquierda
+      Serial.println("Girando a la izquierda");
       turnLeft(TURN_SPEED);
-      delay(700);
+      delay(TURN_DELAY);
     } else if (rightDistance > MIN_DISTANCE) {
       // Girar a la derecha
+      Serial.println("Girando a la derecha");
       turnRight(TURN_SPEED);
-      delay(700);
+      delay(TURN_DELAY);
     } else {
       // Dar la vuelta
+      Serial.println("Dando la vuelta");
       turnAround();
     }
 
@@ -175,26 +190,25 @@ void setLEDs(bool greenOn, bool redOn) {
 
 // Función para medir la distancia con el sensor ultrasónico
 long measureDistance() {
-  // Limpiar el pin Trigger
-  digitalWrite(TRIG_PIN, LOW);
-  delayMicroseconds(2);
-
-  // Enviar pulso de 10 microsegundos
-  digitalWrite(TRIG_PIN, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(TRIG_PIN, LOW);
-
-  // Leer el tiempo de respuesta
-  duration = pulseIn(ECHO_PIN, HIGH);
-
-  // Calcular la distancia en cm
-  return duration / 58.2;
+  long total = 0;
+  for (int i = 0; i < NUM_READINGS; i++) {
+    digitalWrite(TRIG_PIN, LOW);
+    delayMicroseconds(2);
+    digitalWrite(TRIG_PIN, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(TRIG_PIN, LOW);
+    long duration = pulseIn(ECHO_PIN, HIGH);
+    long distance = duration * 0.034 / 2;
+    total += distance;
+    delay(10);  // Pequeña pausa entre mediciones
+  }
+  return total / NUM_READINGS;  // Retorna el promedio
 }
 
 // Función para escanear en una dirección específica
 int scanDirection(int angle) {
   servoHead.write(angle);
-  delay(500);  // Esperar a que el servo se posicione
+  delay(SCAN_DELAY);  // Esperar a que el servo se posicione
   int scannedDistance = measureDistance();
   Serial.print("Distancia a ");
   Serial.print(angle);
@@ -209,46 +223,45 @@ void followLine() {
   int lineState1 = digitalRead(TRACK_SENSOR_PIN_1);  // Leer primer sensor
   int lineState2 = digitalRead(TRACK_SENSOR_PIN_2);  // Leer segundo sensor
 
-  // Lógica de seguimiento de línea con dos sensores
-  if (lineState1 == 1 && lineState2 == 1) {
-    // Ambos sensores sobre la línea: avanzar recto
+  // Lógica de seguimiento de línea con dos sensores (línea negra sobre fondo blanco)
+  if (lineState1 == LINE_THRESHOLD && lineState2 == LINE_THRESHOLD) {
+    // Ambos sensores sobre la línea (negro): avanzar recto
     moveForward(BASE_SPEED);
-  } else if (lineState1 == 0 && lineState2 == 1) {
-    // Primer sensor fuera de la línea: girar a la izquierda
+  } else if (lineState1 == LINE_THRESHOLD && lineState2 == BACKGROUND_THRESHOLD) {
+    // Primer sensor sobre el fondo (blanco): girar a la izquierda
     turnLeft(SLOW_SPEED);
-  } else if (lineState1 == 1 && lineState2 == 0) {
-    // Segundo sensor fuera de la línea: girar a la derecha
+  } else if (lineState1 == BACKGROUND_THRESHOLD && lineState2 == LINE_THRESHOLD) {
+    // Segundo sensor sobre el fondo (blanco): girar a la derecha
     turnRight(SLOW_SPEED);
   } else {
-    // Ambos sensores fuera de la línea: buscar la línea
+    // Ambos sensores sobre el fondo (blanco): buscar la línea
     findLine();
   }
 }
 
 // Función para buscar la línea cuando se ha perdido
 void findLine() {
-  // Estrategia simple: girar ligeramente a la izquierda y luego a la derecha
-  // hasta encontrar la línea nuevamente
+  // Estrategia mejorada con dos sensores
   turnLeft(SLOW_SPEED);
   delay(100);
 
   // Verificar si hemos encontrado la línea
-  if (digitalRead(TRACK_SENSOR_PIN_1) == 1 || digitalRead(TRACK_SENSOR_PIN_2) == 1) {
+  if (digitalRead(TRACK_SENSOR_PIN_1) == LINE_THRESHOLD || digitalRead(TRACK_SENSOR_PIN_2) == LINE_THRESHOLD) {
     return;
   }
 
   // Si no, girar a la derecha
   turnRight(SLOW_SPEED);
-  delay(200);
+  delay(TURN_DELAY);
 
   // Verificar si hemos encontrado la línea
-  if (digitalRead(TRACK_SENSOR_PIN_1) == 1 || digitalRead(TRACK_SENSOR_PIN_2) == 1) {
+  if (digitalRead(TRACK_SENSOR_PIN_1) == LINE_THRESHOLD || digitalRead(TRACK_SENSOR_PIN_2) == LINE_THRESHOLD) {
     return;
   }
 
   // Si aún no, girar a la izquierda nuevamente pero más tiempo
   turnLeft(SLOW_SPEED);
-  delay(300);
+  delay(TURN_DELAY * 1.5);  // Ajuste adicional para búsqueda más larga
 }
 
 // Funciones de control de motores con control de velocidad PWM

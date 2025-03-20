@@ -1,6 +1,6 @@
 # Robot Seguidor de Líneas con Detección de Obstáculos
 
-![Robot ensamblado](docs/img/robot_assembled.jpg)
+![Robot ensamblado](docs/img/robot_assembled.png)
 
 ## Descripción
 Robot móvil autónomo construido con Arduino Nano capaz de seguir líneas negras y detectar/evitar obstáculos utilizando un sensor ultrasónico montado en un cabezal móvil.

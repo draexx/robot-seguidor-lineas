@@ -34,12 +34,18 @@ Esta guía detalla el proceso de calibración necesario para optimizar el funcio
 - Destornillador pequeño (si el sensor tiene potenciómetros).
 
 ### Pasos:
-1. Coloca el robot sobre la superficie de prueba.
-2. Asegúrate de que el sensor de línea esté correctamente alineado con la línea negra.
-3. Enciende el robot y observa el comportamiento:
+1. Modifica los valores `LINE_THRESHOLD` y `BACKGROUND_THRESHOLD` según sea necesario:
+
+   ```arduino
+    const int LINE_THRESHOLD = 1;     // Valor que indica que el sensor está sobre la línea (negro)
+    const int BACKGROUND_THRESHOLD = 0; // Valor que indica que el sensor está sobre el fondo (blanco)
+   ```
+2. Coloca el robot sobre la superficie de prueba.
+3. Asegúrate de que el sensor de línea esté correctamente alineado con la línea negra.
+4. Enciende el robot y observa el comportamiento:
    - Si el robot no sigue la línea correctamente, ajusta la sensibilidad del sensor (si tiene potenciómetros).
    - Gira el potenciómetro lentamente hasta que el robot siga la línea de manera estable.
-4. Repite el proceso en diferentes superficies para asegurar que el robot funcione en diversos entornos.
+5. Repite el proceso en diferentes superficies para asegurar que el robot funcione en diversos entornos.
 
 ---
 
@@ -80,7 +86,7 @@ Esta guía detalla el proceso de calibración necesario para optimizar el funcio
 
 2. **Ajuste de parámetros de detección**
    - Modifica los valores `MIN_DISTANCE` y `OBSTACLE_CHECK_INTERVAL` según sea necesario:
-   
+
    ```arduino
    #define MIN_DISTANCE 15      // Distancia mínima antes de considerar un obstáculo (cm)
    #define OBSTACLE_CHECK_INTERVAL 100  // Intervalo para comprobar obstáculos (ms)
@@ -163,6 +169,10 @@ const int BASE_SPEED = 150;     // Velocidad base de los motores (0-255)
 const int TURN_SPEED = 120;     // Velocidad de giro (0-255)
 const int SLOW_SPEED = 80;      // Velocidad lenta para giros precisos
 const int MIN_DISTANCE = 10;    // Distancia mínima para detectar obstáculo (cm)
+const int NUM_READINGS = 5;     // Número de mediciones para promediar la distancia
+// Parámetros de tiempo
+const int TURN_DELAY = 700;       // Tiempo de giro (ms)
+const int SCAN_DELAY = 500;       // Tiempo de escaneo (ms)
 ```
 
 Recuerda que estos valores pueden requerir ajustes dependiendo de:
